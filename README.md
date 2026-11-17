@@ -65,7 +65,7 @@ All application endpoints are under `/api/v1`; legacy `/api` remains available f
 Run `npm test` for backend tests and `npm run build` for the frontend production build. Test end-to-end workflows with a configured MongoDB database before deployment. Local checks do not replace production cookie, CORS, database and authorization checks.
 
 ## Deployment
-Deploy `client/` to Vercel and `server/` to Render; use MongoDB Atlas. Set Vercel `VITE_API_URL` to `https://YOUR-RENDER-SERVICE/api/v1`. Set backend secrets only in Render and configure `CLIENT_URL` to the exact frontend origin.
+Deploy `client/` to Vercel and `server/` to Render; use MongoDB Atlas and Cloudinary for avatars. Follow the [deployment guide](./docs/13-deployment-guide.md) for service settings, environment variables, cookies, and production verification. Never commit real secrets or put them in `VITE_*` variables.
 
 ## Team ownership
 The nine-member allocation and shared-file ownership rules remain in the project specification. The central API router provides a consistent integration surface; module owners should review and take ownership of their assigned modules before merging feature branches.
