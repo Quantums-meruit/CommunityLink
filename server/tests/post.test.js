@@ -1,0 +1,3 @@
+import test from "node:test";import assert from "node:assert/strict";import Post from "../src/models/Post.js";import Event from "../src/models/Event.js";
+test("post model requires a community, author and content",()=>{const error=new Post({}).validateSync();assert.ok(error.errors.community);assert.ok(error.errors.author);assert.ok(error.errors.content);});
+test("event validation rejects an end time before its start",async()=>{const event=new Event({community:"507f1f77bcf86cd799439011",createdBy:"507f1f77bcf86cd799439012",title:"Test",description:"Test event",startsAt:"2026-11-20T12:00:00Z",endsAt:"2026-11-20T11:00:00Z"});await assert.rejects(event.validate(),/Event end must be after its start/);});

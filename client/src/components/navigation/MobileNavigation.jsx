@@ -1,0 +1,1 @@
+import {NavLink} from "react-router-dom";export default function MobileNavigation(){return <nav className="mobile-nav"><NavLink to="/communities">Communities</NavLink><NavLink to="/events">Events</NavLink><NavLink to="/businesses">Businesses</NavLink><NavLink to="/opportunities">Opportunities</NavLink></nav>}

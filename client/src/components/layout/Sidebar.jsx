@@ -1,0 +1,1 @@
+import {NavLink} from "react-router-dom";export default function Sidebar(){return <aside className="sidebar"><NavLink to="/dashboard">Overview</NavLink><NavLink to="/profile">Profile</NavLink><NavLink to="/applications">Applications</NavLink><NavLink to="/notifications">Notifications</NavLink></aside>}

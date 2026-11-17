@@ -1,0 +1,3 @@
+import test from "node:test";import assert from "node:assert/strict";import mongoose from "mongoose";import Community from "../src/models/Community.js";import Membership from "../src/models/Membership.js";
+test("community model requires its core fields",async()=>{const doc=new Community({});const error=doc.validateSync();assert.ok(error);assert.ok(error.errors.name);assert.ok(error.errors.slug);assert.ok(error.errors.owner);});
+test("membership model has a compound unique user-community index",()=>{const indexes=Membership.schema.indexes();assert.ok(indexes.some(([fields,options])=>fields.user===1&&fields.community===1&&options.unique===true));assert.equal(mongoose.isValidObjectId("507f1f77bcf86cd799439011"),true);});

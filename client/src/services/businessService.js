@@ -1,0 +1,1 @@
+import api from "./api";export const listBusinesses=params=>api.get("/businesses",{params});export const getBusiness=id=>api.get(`/businesses/${id}`);export const submitBusiness=data=>api.post("/businesses",data);

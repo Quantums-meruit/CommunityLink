@@ -1,0 +1,1 @@
+export default function ForgotPasswordPage(){return <section className="form-panel"><h1>Password recovery</h1><p>Password reset is not part of the current MVP. Contact the platform administrator for account assistance.</p></section>}

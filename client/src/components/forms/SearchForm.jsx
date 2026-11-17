@@ -1,0 +1,1 @@
+export default function SearchForm({value,onChange,onSubmit,placeholder="Search…"}){return <form className="search-bar" onSubmit={onSubmit}><input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/><button className="button button-dark">Search</button></form>}

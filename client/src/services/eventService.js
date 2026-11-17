@@ -1,0 +1,1 @@
+import api from "./api";export const listEvents=params=>api.get("/events",{params});export const getEvent=id=>api.get(`/events/${id}`);export const registerForEvent=id=>api.post(`/events/${id}/register`);export const cancelRegistration=id=>api.delete(`/events/${id}/register`);

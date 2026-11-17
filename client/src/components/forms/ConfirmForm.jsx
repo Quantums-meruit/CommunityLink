@@ -1,0 +1,1 @@
+export default function ConfirmForm({message="Are you sure?",onConfirm,onCancel}){return <div><p>{message}</p><button className="button button-primary" onClick={onConfirm}>Confirm</button><button className="button button-quiet" onClick={onCancel}>Cancel</button></div>}

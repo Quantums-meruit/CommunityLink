@@ -1,0 +1,1 @@
+export default function Input({label,id,error,...props}){return <label className="field" htmlFor={id}>{label}<input id={id} aria-invalid={Boolean(error)} {...props}/>{error&&<small role="alert">{error}</small>}</label>}

@@ -1,0 +1,1 @@
+import api from "./api";export const listOpportunities=params=>api.get("/opportunities",{params});export const getOpportunity=id=>api.get(`/opportunities/${id}`);export const applyForOpportunity=(id,data)=>api.post(`/opportunities/${id}/applications`,data);export const listMyApplications=()=>api.get("/applications/me");

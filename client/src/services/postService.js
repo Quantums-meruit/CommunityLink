@@ -1,0 +1,1 @@
+import api from "./api";export const listPosts=id=>api.get(`/communities/${id}/posts`);export const createPost=(id,data)=>api.post(`/communities/${id}/posts`,data);export const getComments=id=>api.get(`/posts/${id}/comments`);export const createComment=(id,data)=>api.post(`/posts/${id}/comments`,data);

@@ -1,0 +1,496 @@
+COMMUNITYLINK DEPLOYMENT DIAGNOSTICS
+Generated: 11/16/2026 21:52:58
+Project root: C:\Users\Administrator\Downloads\CommunityLink-implementation-test\CommunityLink
+
+========== NODE AND NPM VERSIONS ==========
+v24.21.0
+11.19.0
+
+
+========== GIT REPOSITORY ==========
+C:/Users/Administrator/Downloads/CommunityLink-implementation-test/CommunityLink
+main
+?? .gitignore
+?? AUDIT-AND-TEST-REPORT.md
+?? LICENSE
+?? README.md
+?? client/
+?? deployment-diagnostics.txt
+?? docs/
+?? package-lock.json
+?? package.json
+?? render.yaml
+?? server/
+?? setup-communitylink.ps1
+git : fatal: your current branch 'main' does not have any commits yet
+At line:6 char:5
++     git log -1 --oneline
++     ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (fatal: your cur...any commits yet:String) [], R    emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
+========== PACKAGE CONFIGURATION ==========
+
+--- package.json ---
+{
+  "name": "communitylink",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev --workspace=client",
+    "dev:client": "npm run dev --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspace=client",
+    "test": "npm test --workspace=server",
+    "start": "npm run start --workspace=server"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}
+
+
+--- client/package.json ---
+{
+  "name": "communitylink-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "axios": "^1.7.9"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0"
+  }
+}
+
+
+--- server/package.json ---
+{
+  "name": "communitylink-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test",
+    "promote-admin": "node scripts/promote-admin.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.11.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5",
+    "multer": "^2.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
+
+
+
+========== LOCKFILE VALIDATION ==========
+node : [eval]:1
+At line:2 char:5
++     node -e 'const fs=require("fs"); for(const f of ["package-lock.js ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([eval]:1:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+const fs=require(fs); for(const f of [package-lock.json,client/package-lock.json,server/package-lock.json]){if(!fs.existsSync(f)){console.log(f+:
+                                                                                                                                                ^
+Expression expected
+
+SyntaxError: Unexpected token ':'
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.21.0
+node : [eval]:1
+At line:4 char:5
++     node -e 'const fs=require("fs");const l=JSON.parse(fs.readFileSyn ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([eval]:1:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+const fs=require(fs);const l=JSON.parse(fs.readFileSync(package-lock.json,utf8));for(const w of [client,server]){const p=JSON.parse(fs.readFileSync(w+/package.json,utf8));console.log(\n+w);for(const [n,v] of 
+Object.entries({...p.dependencies,...p.devDependencies})){const x=l.packages[node_modules/+n];console.log((x?PRESENT
+                                                                                                                                                      ^
+Unterminated regexp literal
+
+SyntaxError: Invalid regular expression: missing /
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.21.0
+
+
+========== NPM WORKSPACES ==========
+communitylink@1.0.0 C:\Users\Administrator\Downloads\CommunityLink-implementation-test\CommunityLink
+Gö£GöÇGöÇ @babel/core@ extraneous
+Gö£GöÇGöÇ @babel/traverse@ extraneous
+Gö£GöÇGöÇ @babel/types@ extraneous
+Gö£GöÇGöÇ @esbuild/win32-x64@ extraneous
+Gö£GöÇGöÇ @rollup/rollup-win32-x64-msvc@ extraneous
+Gö£GöÇGöÇ axios@ extraneous
+Gö£GöÇGöÇ mongodb@ extraneous
+Gö£GöÇGöÇ mongoose@ extraneous
+Gö£GöÇGöÇ react-router@ extraneous
+GööGöÇGöÇ send@ extraneous
+
+
+
+========== NODE PROCESSES ==========
+
+   Id ProcessName
+   -- -----------
+ 3388 node       
+ 3780 node       
+10656 node       
+11972 node       
+12836 node       
+
+
+
+
+========== DEVELOPMENT PORTS ==========
+
+LocalAddress LocalPort OwningProcess
+------------ --------- -------------
+::1               5173         11972
+::                5000         10656
+
+
+
+
+========== NODE MODULES DIRECTORIES ==========
+node_modules : EXISTS
+client/node_modules : EXISTS
+server/node_modules : EXISTS
+
+
+========== ENVIRONMENT FILES - NAMES ONLY ==========
+
+File: C:\Users\Administrator\Downloads\CommunityLink-implementation-test\CommunityLink\client\.env.example
+Variable: VITE_API_URL
+
+File: C:\Users\Administrator\Downloads\CommunityLink-implementation-test\CommunityLink\server\.env
+Variable: JWT_SECRET
+Variable: MONGODB_URI
+Variable: CLIENT_URL
+Variable: CLIENT_URL
+Variable: CLOUDINARY_CLOUD_NAME
+Variable: CLOUDINARY_API_KEY
+Variable: CLOUDINARY_API_SECRET
+
+File: C:\Users\Administrator\Downloads\CommunityLink-implementation-test\CommunityLink\server\.env.example
+Variable: JWT_SECRET
+Variable: JWT_EXPIRES_IN
+Variable: CLIENT_URL
+Variable: COOKIE_NAME
+Variable: PORT
+Variable: NODE_ENV
+Variable: MONGODB_URI
+Variable: CLOUDINARY_CLOUD_NAME
+Variable: CLOUDINARY_API_KEY
+Variable: CLOUDINARY_API_SECRET
+
+
+========== GIT IGNORE PROTECTION ==========
+.gitignore:5:.env	.env
+.gitignore:5:.env	client/.env
+.gitignore:5:.env	server/.env
+.gitignore:2:**/node_modules/	node_modules
+.gitignore:2:**/node_modules/	client/node_modules
+.gitignore:2:**/node_modules/	server/node_modules
+.gitignore:3:dist/	client/dist
+
+
+========== DEPLOYMENT CONFIGURATION FILES ==========
+
+--- render.yaml ---
+services:
+  - type: web
+    name: communitylink-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+
+
+--- client/vercel.json ---
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+
+NOT PRESENT: vercel.json
+
+--- .gitignore ---
+node_modules/
+**/node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+
+
+========== SERVER CONFIGURATION REFERENCES ==========
+
+--- server/src/server.js ---
+import "dotenv/config"; import app from "./app.js"; import mongoose from "mongoose"; import {connectDB} from "./config/db.js"; const PORT=process.env.PORT||5000; let server; async function start(){try{if(!process.env.JWT_SECRET||process.env.JWT_SECRET.length<32||/(change|replace|example|placeholder)/i.test(process.env.JWT_SECRET))throw new Error("Set JWT_SECRET to a private random value of at least 32 characters.");if(process.env.NODE_ENV==="production"&&!process.env.CLIENT_URL)throw new Error("CLIENT_URL is required in production.");await connectDB();server=app.listen(PORT,()=>console.log(`CommunityLink API listening on ${PORT}`));}catch(e){console.error("Server startup failed:",e.message);process.exit(1);}} async function shutdown(signal){console.log(`${signal} received; shutting down.`);if(server)server.close(async()=>{await mongoose.disconnect();process.exit(0);});else process.exit(0);} process.on("SIGTERM",()=>shutdown("SIGTERM"));process.on("SIGINT",()=>shutdown("SIGINT"));start();
+
+--- server/src/app.js ---
+
+--- server/src/config/db.js ---
+import mongoose from "mongoose"; export async function connectDB(){const uri=process.env.MONGODB_URI||process.env.MONGO_URI;if(!uri||uri==="mongodb_connection_string")throw new Error("Set MONGODB_URI to a valid MongoDB connection string.");mongoose.connection.on("disconnected",()=>console.warn("MongoDB disconnected."));mongoose.connection.on("error",e=>console.error("MongoDB error:",e.message));await mongoose.connect(uri,{serverSelectionTimeoutMS:10000});console.log("MongoDB connected.");} export const isDbReady=()=>mongoose.connection.readyState===1;
+
+--- server/src/config/cloudinary.js ---
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+export const isCloudinaryConfigured = Boolean(
+if (isCloudinaryConfigured) {
+
+--- server/src/middleware/errorMiddleware.js ---
+
+
+========== FRONTEND API CONFIGURATION REFERENCES ==========
+
+--- client/vite.config.js ---
+import { defineConfig } from "vite";import react from "@vitejs/plugin-react";export default defineConfig({plugins:[react()],server:{port:5173,proxy:{"/api":{target:"http://localhost:5000",changeOrigin:true}}}});
+
+--- client/src/services/api.js ---
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000/api/v1",
+  withCredentials: true,
+
+--- client/src/App.jsx ---
+import {BrowserRouter} from "react-router-dom";import {AuthProvider} from "./context/AuthContext";import AppRoutes from "./routes/AppRoutes";export default function App(){return <BrowserRouter><AuthProvider><AppRoutes/></AuthProvider></BrowserRouter>}
+
+
+========== AVAILABLE PROJECT SCRIPTS ==========
+node : [eval]:1
+At line:2 char:5
++     node -e 'const fs=require("fs");for(const f of ["package.json","c ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([eval]:1:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+const fs=require(fs);for(const f of [package.json,client/package.json,server/package.json]){if(fs.existsSync(f)){const 
+p=JSON.parse(fs.readFileSync(f,utf8));console.log(\n+f);console.log(JSON.stringify(p.scripts||{},null,2));}}
+                                                                                                                                                                         ^
+Expected unicode escape
+
+SyntaxError: Invalid or unexpected token
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.21.0
+
+
+========== NPM SECURITY AUDIT ==========
+found 0 vulnerabilities
+
+
+========== PROJECT FILE STRUCTURE ==========
+.gitignore
+AUDIT-AND-TEST-REPORT.md
+client\.env.example
+client\index.html
+client\package.json
+client\src\App.jsx
+client\src\components\common\Button.jsx
+client\src\components\common\EmptyState.jsx
+client\src\components\common\Feedback.jsx
+client\src\components\common\Input.jsx
+client\src\components\common\Loader.jsx
+client\src\components\common\Modal.jsx
+client\src\components\common\ResourceCard.jsx
+client\src\components\common\ResourceList.jsx
+client\src\components\forms\ConfirmForm.jsx
+client\src\components\forms\ResourceForm.jsx
+client\src\components\forms\SearchForm.jsx
+client\src\components\layout\DashboardLayout.jsx
+client\src\components\layout\Footer.jsx
+client\src\components\layout\Header.jsx
+client\src\components\layout\MainLayout.jsx
+client\src\components\layout\Sidebar.jsx
+client\src\components\navigation\MobileNavigation.jsx
+client\src\components\navigation\Navbar.jsx
+client\src\context\AuthContext.jsx
+client\src\hooks\useAuth.js
+client\src\hooks\useFetch.js
+client\src\main.jsx
+client\src\pages\Admin\AdminDashboard.jsx
+client\src\pages\Auth\ForgotPasswordPage.jsx
+client\src\pages\Auth\LoginPage.jsx
+client\src\pages\Auth\RegisterPage.jsx
+client\src\pages\Businesses\BusinessDetailsPage.jsx
+client\src\pages\Businesses\BusinessListPage.jsx
+client\src\pages\Communities\CommunityDetailsPage.jsx
+client\src\pages\Communities\CommunityListPage.jsx
+client\src\pages\Communities\CreateCommunityPage.jsx
+client\src\pages\Dashboard\DashboardPage.jsx
+client\src\pages\Events\EventDetailsPage.jsx
+client\src\pages\Events\EventListPage.jsx
+client\src\pages\GenericPages.jsx
+client\src\pages\Home\HomePage.jsx
+client\src\pages\NotFoundPage.jsx
+client\src\pages\Opportunities\OpportunityDetailsPage.jsx
+client\src\pages\Opportunities\OpportunityListPage.jsx
+client\src\pages\Posts\PostDetailsPage.jsx
+client\src\pages\Profile\ProfilePage.jsx
+client\src\routes\AdminRoute.jsx
+client\src\routes\AppRoutes.jsx
+client\src\routes\ProtectedRoute.jsx
+client\src\services\api.js
+client\src\services\authService.js
+client\src\services\businessService.js
+client\src\services\communityService.js
+client\src\services\eventService.js
+client\src\services\opportunityService.js
+client\src\services\postService.js
+client\src\styles\global.css
+client\src\styles\responsive.css
+client\src\styles\variables.css
+client\src\utils\constants.js
+client\src\utils\formatDate.js
+client\vercel.json
+client\vite.config.js
+deployment-diagnostics.txt
+docs\01-project-overview.md
+docs\02-requirements.md
+docs\03-project-structure.md
+docs\04-database-design.md
+docs\05-api-documentation.md
+docs\06-frontend-architecture.md
+docs\07-backend-architecture.md
+docs\08-authentication-security.md
+docs\09-ui-ux-blueprint.md
+docs\10-team-allocation.md
+docs\11-github-workflow.md
+docs\12-testing-strategy.md
+docs\13-deployment-guide.md
+docs\14-integration-guide.md
+docs\meeting-notes.md
+LICENSE
+package.json
+package-lock.json
+README.md
+render.yaml
+server\.env
+server\.env.example
+server\package.json
+server\package-lock.json
+server\scripts\promote-admin.js
+server\src\app.js
+server\src\config\cloudinary.js
+server\src\config\cors.js
+server\src\config\db.js
+server\src\controllers\adminController.js
+server\src\controllers\applicationController.js
+server\src\controllers\authController.js
+server\src\controllers\businessController.js
+server\src\controllers\commentController.js
+server\src\controllers\communityController.js
+server\src\controllers\eventController.js
+server\src\controllers\opportunityController.js
+server\src\controllers\postController.js
+server\src\controllers\reportController.js
+server\src\controllers\userController.js
+server\src\middleware\authMiddleware.js
+server\src\middleware\csrfMiddleware.js
+server\src\middleware\errorMiddleware.js
+server\src\middleware\notFoundMiddleware.js
+server\src\middleware\roleMiddleware.js
+server\src\middleware\uploadMiddleware.js
+server\src\models\Application.js
+server\src\models\Business.js
+server\src\models\Comment.js
+server\src\models\Community.js
+server\src\models\Event.js
+server\src\models\EventRegistration.js
+server\src\models\Membership.js
+server\src\models\Notification.js
+server\src\models\Opportunity.js
+server\src\models\Post.js
+server\src\models\Report.js
+server\src\models\User.js
+server\src\routes\adminRoutes.js
+server\src\routes\applicationRoutes.js
+server\src\routes\authRoutes.js
+server\src\routes\businessRoutes.js
+server\src\routes\commentRoutes.js
+server\src\routes\communityRoutes.js
+server\src\routes\eventRoutes.js
+server\src\routes\index.js
+server\src\routes\opportunityRoutes.js
+server\src\routes\postRoutes.js
+server\src\routes\reportRoutes.js
+server\src\routes\userRoutes.js
+server\src\server.js
+server\src\services\authService.js
+server\src\services\communityService.js
+server\src\services\moderationService.js
+server\src\services\notificationService.js
+server\src\utils\ApiError.js
+server\src\utils\asyncHandler.js
+server\src\utils\generateToken.js
+server\src\validators\authValidator.js
+server\src\validators\communityValidator.js
+server\src\validators\postValidator.js
+server\tests\auth.test.js
+server\tests\community.test.js
+server\tests\post.test.js
+setup-communitylink.ps1
+
+
+========== AUDIT COMPLETE ==========
+Report: C:\Users\Administrator\Downloads\CommunityLink-implementation-test\CommunityLink\deployment-diagnostics.txt

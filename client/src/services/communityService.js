@@ -1,0 +1,1 @@
+import api from "./api";export const listCommunities=params=>api.get("/communities",{params});export const getCommunity=id=>api.get(`/communities/${id}`);export const createCommunity=data=>api.post("/communities",data);export const joinCommunity=id=>api.post(`/communities/${id}/join`);export const leaveCommunity=id=>api.post(`/communities/${id}/leave`);

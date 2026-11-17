@@ -1,0 +1,1 @@
+export default function formatDate(value,options={dateStyle:"medium",timeStyle:"short"}){if(!value)return "Date not set";const date=new Date(value);return Number.isNaN(date.getTime())?"Invalid date":new Intl.DateTimeFormat(undefined,options).format(date)}

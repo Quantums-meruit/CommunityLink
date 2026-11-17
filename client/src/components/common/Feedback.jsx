@@ -1,0 +1,1 @@
+export function Loading(){return <p className="page-state">Loading…</p>}export function ErrorMessage({children}){return children?<p className="alert alert-error" role="alert">{children}</p>:null}export function EmptyState({title="Nothing here yet",text="Check back later."}){return <div className="empty-state"><h3>{title}</h3><p>{text}</p></div>}
