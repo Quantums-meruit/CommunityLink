@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../../services/api";
 import ResourceCard from "./ResourceCard";
 import { EmptyState, ErrorMessage, Loading } from "./Feedback";
@@ -67,17 +68,17 @@ export default function ResourceList({
   }, [endpoint, page]);
 
   return (
-    <section>
+    <section aria-labelledby="resource-list-title">
       <div className="page-heading">
         <div>
           <p className="eyebrow">DISCOVER</p>
-          <h1>{title}</h1>
+          <h1 id="resource-list-title">{title}</h1>
           <p>{description}</p>
         </div>
         {createPath && (
-          <a className="button button-primary" href={createPath}>
+          <Link className="button button-primary" to={createPath}>
             Create new
-          </a>
+          </Link>
         )}
       </div>
 
@@ -89,12 +90,18 @@ export default function ResourceList({
             load();
           }}
         >
+          <label className="sr-only" htmlFor="resource-search">
+            Search {title.toLowerCase()}
+          </label>
           <input
+            id="resource-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`Search ${title.toLowerCase()}…`}
           />
-          <button className="button button-dark">Search</button>
+          <button className="button button-dark" type="submit">
+            Search
+          </button>
         </form>
       )}
 
@@ -110,11 +117,16 @@ export default function ResourceList({
             ))}
           </div>
           <div className="pagination">
-            <button disabled={page === 1} onClick={() => setPage((x) => x - 1)}>
+            <button
+              type="button"
+              disabled={page === 1}
+              onClick={() => setPage((x) => x - 1)}
+            >
               Previous
             </button>
             <span>Page {page}</span>
             <button
+              type="button"
               disabled={items.length < 9}
               onClick={() => setPage((x) => x + 1)}
             >

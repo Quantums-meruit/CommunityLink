@@ -3,10 +3,28 @@ import { useEffect, useRef, useState } from "react";
 import api from "../../services/api";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const CROP_STAGE_SIZE = 220;
+const MIN_CROP_ZOOM = 1;
+const MAX_CROP_ZOOM = 3;
+const INITIAL_CROP_SIZE = 0.75;
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getImageLayout(naturalSize, stageSize) {
+  const scale = Math.min(
+    stageSize.width / naturalSize.width,
+    stageSize.height / naturalSize.height,
+  );
+  const width = naturalSize.width * scale;
+  const height = naturalSize.height * scale;
+
+  return {
+    left: (stageSize.width - width) / 2,
+    top: (stageSize.height - height) / 2,
+    width,
+    height,
+  };
 }
 
 export default function ProfilePage() {
@@ -19,8 +37,9 @@ export default function ProfilePage() {
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [preview, setPreview] = useState("");
-  const [previewSize, setPreviewSize] = useState({ width: 1, height: 1 });
-  const [crop, setCrop] = useState({ x: 0, y: 0, zoom: 1 });
+  const [previewSize, setPreviewSize] = useState({ width: 0, height: 0 });
+  const [imageLayout, setImageLayout] = useState(null);
+  const [crop, setCrop] = useState({ centerX: 0.5, centerY: 0.5, zoom: 1 });
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,8 +47,16 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const dragStartRef = useRef({ x: 0, y: 0, originX: 0, originY: 0 });
+  const dragStartRef = useRef({
+    pointerX: 0,
+    pointerY: 0,
+    centerX: 0.5,
+    centerY: 0.5,
+  });
+  const activePointerRef = useRef(null);
   const cropStageRef = useRef(null);
+  const cropDialogRef = useRef(null);
+  const cropCloseButtonRef = useRef(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -62,41 +89,107 @@ export default function ProfilePage() {
   }, [preview]);
 
   useEffect(() => {
-    if (!dragging) return;
+    if (!selectedImage || !cropStageRef.current || !previewSize.width) return;
 
-    function handlePointerMove(event) {
-      const dx = event.clientX - dragStartRef.current.x;
-      const dy = event.clientY - dragStartRef.current.y;
-
-      const coverScale =
-        Math.max(CROP_STAGE_SIZE / previewSize.width, CROP_STAGE_SIZE / previewSize.height) * crop.zoom;
-      const renderWidth = previewSize.width * coverScale;
-      const renderHeight = previewSize.height * coverScale;
-      const maxX = Math.max(0, (renderWidth - CROP_STAGE_SIZE) / 2);
-      const maxY = Math.max(0, (renderHeight - CROP_STAGE_SIZE) / 2);
-
-      setCrop((current) => ({
-        ...current,
-        x: clamp(dragStartRef.current.originX + dx, -maxX, maxX),
-        y: clamp(dragStartRef.current.originY + dy, -maxY, maxY),
-      }));
-    }
-
-    function stopDragging() {
-      setDragging(false);
-    }
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", stopDragging);
-
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", stopDragging);
+    const stage = cropStageRef.current;
+    const updateLayout = () => {
+      const bounds = stage.getBoundingClientRect();
+      setImageLayout(
+        getImageLayout(previewSize, {
+          width: bounds.width,
+          height: bounds.height,
+        }),
+      );
     };
-  }, [dragging, crop.zoom, previewSize]);
+
+    updateLayout();
+    const observer = new ResizeObserver(updateLayout);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [selectedImage, previewSize]);
+
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const previousFocus = document.activeElement;
+    cropCloseButtonRef.current?.focus();
+    return () => {
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        previousFocus.focus();
+      }
+    };
+  }, [selectedImage]);
+
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    function handleDialogKeys(event) {
+      if (event.key === "Escape" && !uploading) {
+        event.preventDefault();
+        cancelCrop();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusableElements = cropDialogRef.current?.querySelectorAll(
+          'button:not([disabled]), input:not([disabled]), [tabindex="0"]',
+        );
+        if (!focusableElements?.length) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        const focusIsInside = cropDialogRef.current?.contains(
+          document.activeElement,
+        );
+
+        if (
+          (event.shiftKey && document.activeElement === firstElement) ||
+          (event.shiftKey && !focusIsInside)
+        ) {
+          event.preventDefault();
+          lastElement.focus();
+        } else if (
+          (!event.shiftKey && document.activeElement === lastElement) ||
+          (!event.shiftKey && !focusIsInside)
+        ) {
+          event.preventDefault();
+          firstElement.focus();
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleDialogKeys);
+    return () => window.removeEventListener("keydown", handleDialogKeys);
+  }, [selectedImage, uploading]);
+
+  function getCropFrameSize(zoom = crop.zoom, layout = imageLayout) {
+    if (!layout) return 0;
+    return (Math.min(layout.width, layout.height) * INITIAL_CROP_SIZE) / zoom;
+  }
+
+  function constrainCrop(centerX, centerY, zoom = crop.zoom, layout = imageLayout) {
+    if (!layout) return { centerX: 0.5, centerY: 0.5 };
+
+    const halfWidth = getCropFrameSize(zoom, layout) / (2 * layout.width);
+    const halfHeight = getCropFrameSize(zoom, layout) / (2 * layout.height);
+
+    return {
+      centerX: clamp(centerX, halfWidth, 1 - halfWidth),
+      centerY: clamp(centerY, halfHeight, 1 - halfHeight),
+    };
+  }
 
   function resetCrop() {
-    setCrop({ x: 0, y: 0, zoom: 1 });
+    setCrop({ centerX: 0.5, centerY: 0.5, zoom: MIN_CROP_ZOOM });
+  }
+
+  function updateZoom(nextZoom) {
+    const zoom = clamp(nextZoom, MIN_CROP_ZOOM, MAX_CROP_ZOOM);
+    setCrop((current) => ({
+      ...constrainCrop(current.centerX, current.centerY, zoom),
+      zoom,
+    }));
   }
 
   function handleImageChange(e) {
@@ -128,22 +221,82 @@ export default function ProfilePage() {
     const url = URL.createObjectURL(file);
     setSelectedImage(file);
     setPreview(url);
-    setPreviewSize({ width: 1, height: 1 });
+    setPreviewSize({ width: 0, height: 0 });
+    setImageLayout(null);
     resetCrop();
     e.target.value = "";
   }
 
-  function startDrag(event) {
-    if (!preview) return;
-
+  function startCropDrag(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    activePointerRef.current = event.pointerId;
     dragStartRef.current = {
-      x: event.clientX,
-      y: event.clientY,
-      originX: crop.x,
-      originY: crop.y,
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      centerX: crop.centerX,
+      centerY: crop.centerY,
     };
-
     setDragging(true);
+  }
+
+  function moveCropFrame(event) {
+    if (activePointerRef.current !== event.pointerId || !imageLayout) return;
+    event.preventDefault();
+
+    const stage = cropStageRef.current?.getBoundingClientRect();
+    if (!stage) return;
+
+    const nextCenterX =
+      dragStartRef.current.centerX +
+      (event.clientX - dragStartRef.current.pointerX) / imageLayout.width;
+    const nextCenterY =
+      dragStartRef.current.centerY +
+      (event.clientY - dragStartRef.current.pointerY) / imageLayout.height;
+
+    setCrop((current) => ({
+      ...constrainCrop(nextCenterX, nextCenterY),
+      zoom: current.zoom,
+    }));
+  }
+
+  function stopCropDrag(event) {
+    if (activePointerRef.current !== event.pointerId) return;
+    activePointerRef.current = null;
+    setDragging(false);
+  }
+
+  function nudgeCrop(event) {
+    const directions = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    };
+    const direction = directions[event.key];
+
+    if (!direction) return;
+    event.preventDefault();
+
+    const distance = event.shiftKey ? 0.03 : 0.005;
+    setCrop((current) => ({
+      ...constrainCrop(
+        current.centerX + direction[0] * distance,
+        current.centerY + direction[1] * distance,
+      ),
+      zoom: current.zoom,
+    }));
+  }
+
+  function cancelCrop() {
+    activePointerRef.current = null;
+    setDragging(false);
+    setSelectedImage(null);
+    setPreview("");
+    setPreviewSize({ width: 0, height: 0 });
+    setImageLayout(null);
+    resetCrop();
   }
 
   async function cropAndUpload() {
@@ -165,17 +318,20 @@ export default function ProfilePage() {
         image.onerror = () => reject(new Error("The image could not be processed."));
       });
 
-      const stageSize = CROP_STAGE_SIZE;
-      const coverScale =
-        Math.max(stageSize / image.naturalWidth, stageSize / image.naturalHeight) * crop.zoom;
-      const renderWidth = image.naturalWidth * coverScale;
-      const renderHeight = image.naturalHeight * coverScale;
-      const left = (stageSize - renderWidth) / 2 + crop.x;
-      const top = (stageSize - renderHeight) / 2 + crop.y;
-      const sourceWidth = stageSize / coverScale;
-      const sourceHeight = stageSize / coverScale;
-      const sourceX = clamp((0 - left) / coverScale, 0, Math.max(0, image.naturalWidth - sourceWidth));
-      const sourceY = clamp((0 - top) / coverScale, 0, Math.max(0, image.naturalHeight - sourceHeight));
+      const sourceSize =
+        (Math.min(image.naturalWidth, image.naturalHeight) *
+          INITIAL_CROP_SIZE) /
+        crop.zoom;
+      const sourceX = clamp(
+        crop.centerX * image.naturalWidth - sourceSize / 2,
+        0,
+        image.naturalWidth - sourceSize,
+      );
+      const sourceY = clamp(
+        crop.centerY * image.naturalHeight - sourceSize / 2,
+        0,
+        image.naturalHeight - sourceSize,
+      );
 
       const canvas = document.createElement("canvas");
       const outputSize = 512;
@@ -189,8 +345,8 @@ export default function ProfilePage() {
         image,
         sourceX,
         sourceY,
-        sourceWidth,
-        sourceHeight,
+        sourceSize,
+        sourceSize,
         0,
         0,
         outputSize,
@@ -216,7 +372,8 @@ export default function ProfilePage() {
 
       setSelectedImage(null);
       setPreview("");
-      setPreviewSize({ width: 1, height: 1 });
+      setPreviewSize({ width: 0, height: 0 });
+      setImageLayout(null);
       resetCrop();
       setMessage("Profile photo uploaded successfully.");
     } catch (err) {
@@ -277,18 +434,41 @@ export default function ProfilePage() {
         .toUpperCase()
     : "?";
 
-  const coverScale =
-    Math.max(CROP_STAGE_SIZE / previewSize.width, CROP_STAGE_SIZE / previewSize.height) * crop.zoom;
-  const renderWidth = previewSize.width * coverScale;
-  const renderHeight = previewSize.height * coverScale;
+  const cropFrameSize = getCropFrameSize();
+  const cropFrameStyle = imageLayout
+    ? {
+        left:
+          imageLayout.left +
+          crop.centerX * imageLayout.width -
+          cropFrameSize / 2,
+        top:
+          imageLayout.top +
+          crop.centerY * imageLayout.height -
+          cropFrameSize / 2,
+        width: cropFrameSize,
+        height: cropFrameSize,
+      }
+    : undefined;
 
   return (
     <section className="profile-shell">
+      <header className="profile-page-intro">
+        <div>
+          <p className="eyebrow">MEMBER PROFILE</p>
+          <h1>Your profile</h1>
+          <p>Make it easier for your community to know you and start a conversation.</p>
+        </div>
+        <span className="profile-intro-status">
+          <span aria-hidden="true" />
+          Your account
+        </span>
+      </header>
+
       <aside className="profile-summary">
-        <div className="profile-summary-badge">Your account</div>
+        <div className="profile-summary-badge">PROFILE PREVIEW</div>
         <div className="profile-summary-avatar">
-          {preview || form.avatar ? (
-            <img src={preview || form.avatar} alt="Profile preview" />
+          {form.avatar ? (
+            <img src={form.avatar} alt="" />
           ) : (
             <span>{initials}</span>
           )}
@@ -310,11 +490,14 @@ export default function ProfilePage() {
       <div className="profile-card">
         <div className="profile-header">
           <div>
-            <p className="eyebrow">YOUR ACCOUNT</p>
-            <h1>Edit profile</h1>
+            <p className="eyebrow">PERSONAL DETAILS</p>
+            <h2>Make it yours</h2>
+            <p className="profile-header-description">
+              Keep your details current so members can recognize and connect with you.
+            </p>
           </div>
           <button type="submit" form="profile-form" className="button button-primary">
-            {saving ? "Saving..." : "Save profile"}
+            {saving ? "Saving..." : "Save changes"}
           </button>
         </div>
 
@@ -333,139 +516,246 @@ export default function ProfilePage() {
         <div className="profile-layout">
           <div className="profile-photo-section">
             <h2>Profile photo</h2>
-
-            {selectedImage ? (
-              <>
-                <p className="crop-instructions">Drag to reposition and zoom to fit your profile photo.</p>
-
-                <div
-                  ref={cropStageRef}
-                  className="crop-stage"
-                  onPointerDown={startDrag}
-                  aria-label="Profile photo crop area"
-                  role="img"
-                >
-                  <img
-                    src={preview}
-                    alt="Crop preview"
-                    onLoad={(event) => {
-                      setPreviewSize({
-                        width: event.target.naturalWidth,
-                        height: event.target.naturalHeight,
-                      });
-                    }}
-                    style={{
-                      width: renderWidth,
-                      height: renderHeight,
-                      transform: `translate(${crop.x}px, ${crop.y}px)`,
-                    }}
-                  />
-                </div>
-
-                <label className="crop-control">
-                  Zoom
-                  <input
-                    type="range"
-                    min="1"
-                    max="2.4"
-                    step="0.01"
-                    value={crop.zoom}
-                    aria-label="Zoom profile photo"
-                    onChange={(event) =>
-                      setCrop((current) => ({
-                        ...current,
-                        zoom: Number(event.target.value),
-                      }))
-                    }
-                  />
-                </label>
-
-                <div className="crop-actions">
-                  <button
-                    type="button"
-                    className="button button-dark"
-                    onClick={cropAndUpload}
-                    disabled={uploading}
-                  >
-                    {uploading ? "Uploading..." : "Apply crop"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-quiet"
-                    onClick={() => {
-                      setSelectedImage(null);
-                      if (preview) {
-                        URL.revokeObjectURL(preview);
-                      }
-                      setPreview("");
-                      resetCrop();
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="profile-photo-preview">
-                  {preview || form.avatar ? (
-                    <img src={preview || form.avatar} alt="Profile preview" />
-                  ) : (
-                    <div className="profile-photo-placeholder">{initials}</div>
-                  )}
-                </div>
-
-                <input
-                  id="profile-avatar-upload"
-                  className="sr-only"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImageChange}
-                  disabled={uploading}
-                />
-
-                <label htmlFor="profile-avatar-upload" className="button button-primary button-wide upload-trigger">
-                  Choose a profile photo
-                </label>
-
-                <p className="helper-text" style={{ marginTop: "12px" }}>
-                  JPEG, PNG or WebP. Maximum file size: 5 MB.
-                </p>
-              </>
-            )}
+            <p className="profile-photo-description">
+              Choose a clear photo that feels like you.
+            </p>
+            <div className="profile-photo-preview profile-photo-picker">
+              {form.avatar ? (
+                <img src={form.avatar} alt="Current profile photo" />
+              ) : (
+                <div className="profile-photo-placeholder">{initials}</div>
+              )}
+              <input
+                id="profile-avatar-upload"
+                className="sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                disabled={uploading}
+              />
+              <label
+                htmlFor="profile-avatar-upload"
+                className="profile-photo-add"
+                aria-label="Choose a profile photo"
+                title="Choose a profile photo"
+              >
+                +
+              </label>
+            </div>
+            <p className="helper-text">
+              Add or change your photo. JPEG, PNG or WebP, up to 5 MB.
+            </p>
           </div>
 
           <form id="profile-form" onSubmit={submit} className="profile-form">
-            <label className="field">
-              Name
+            <div className="field">
+              <label htmlFor="profile-name">Name</label>
               <input
+                id="profile-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
+                autoComplete="name"
+                aria-describedby="profile-name-hint"
               />
-            </label>
+              <span className="profile-field-hint" id="profile-name-hint">
+                Use the name you want community members to recognize.
+              </span>
+            </div>
 
-            <label className="field">
-              Bio
+            <div className="field">
+              <label htmlFor="profile-bio">Bio</label>
               <textarea
+                id="profile-bio"
                 rows="5"
                 value={form.bio}
                 onChange={(e) => setForm({ ...form, bio: e.target.value })}
                 placeholder="Tell your communities a little about yourself..."
+                aria-describedby="profile-bio-hint"
               />
-            </label>
+              <span className="profile-field-hint" id="profile-bio-hint">
+                A sentence or two is a great place to start.
+              </span>
+            </div>
 
-            <label className="field">
-              Location
+            <div className="field">
+              <label htmlFor="profile-location">Location</label>
               <input
+                id="profile-location"
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
                 placeholder="City, region or country"
+                autoComplete="address-level2"
+                aria-describedby="profile-location-hint"
               />
-            </label>
+              <span className="profile-field-hint" id="profile-location-hint">
+                Add a general area to help people nearby find you.
+              </span>
+            </div>
           </form>
         </div>
       </div>
+
+      {selectedImage && (
+        <div
+          className="crop-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !uploading) {
+              cancelCrop();
+            }
+          }}
+        >
+          <section
+            ref={cropDialogRef}
+            className="crop-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="crop-modal-title"
+          >
+            <div className="crop-modal-header">
+              <div>
+                <p className="eyebrow">Profile photo</p>
+                <h2 id="crop-modal-title">Choose your photo crop</h2>
+                <p>Move the circle to choose what people will see.</p>
+              </div>
+              <button
+                ref={cropCloseButtonRef}
+                type="button"
+                className="crop-modal-close"
+                onClick={cancelCrop}
+                disabled={uploading}
+                aria-label="Close photo editor"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="crop-editor-layout">
+              <div
+                ref={cropStageRef}
+                className="crop-editor-stage"
+                aria-label="Photo crop editor"
+              >
+                <img
+                  className="crop-editor-image"
+                  src={preview}
+                  alt="Selected photo"
+                  style={
+                    imageLayout
+                      ? {
+                          left: imageLayout.left,
+                          top: imageLayout.top,
+                          width: imageLayout.width,
+                          height: imageLayout.height,
+                        }
+                      : { visibility: "hidden" }
+                  }
+                  onLoad={(event) =>
+                    setPreviewSize({
+                      width: event.currentTarget.naturalWidth,
+                      height: event.currentTarget.naturalHeight,
+                    })
+                  }
+                />
+                {imageLayout && (
+                  <div
+                    className={`crop-selection${dragging ? " is-dragging" : ""}`}
+                    style={cropFrameStyle}
+                    onPointerDown={startCropDrag}
+                    onPointerMove={moveCropFrame}
+                    onPointerUp={stopCropDrag}
+                    onPointerCancel={stopCropDrag}
+                    onKeyDown={nudgeCrop}
+                    role="group"
+                    aria-label="Circular crop selection. Use arrow keys to adjust its position."
+                    tabIndex={0}
+                  >
+                    <span aria-hidden="true">Move</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="crop-editor-controls">
+                <p className="crop-editor-hint">
+                  The dimmed area will be cropped out. Drag the circular frame
+                  to select your profile picture.
+                </p>
+                <div className="crop-control">
+                  <div className="crop-control-heading">
+                    <label htmlFor="profile-photo-zoom">Crop size</label>
+                    <output htmlFor="profile-photo-zoom">
+                      {Math.round((INITIAL_CROP_SIZE / crop.zoom) * 100)}%
+                    </output>
+                  </div>
+                  <div className="crop-zoom-controls">
+                    <button
+                      type="button"
+                      className="crop-zoom-button"
+                      onClick={() => updateZoom(crop.zoom - 0.1)}
+                      disabled={crop.zoom <= MIN_CROP_ZOOM}
+                      aria-label="Show a larger crop area"
+                    >
+                      −
+                    </button>
+                    <input
+                      id="profile-photo-zoom"
+                      type="range"
+                      min={MIN_CROP_ZOOM}
+                      max={MAX_CROP_ZOOM}
+                      step="0.05"
+                      value={crop.zoom}
+                      aria-label="Adjust crop size"
+                      onChange={(event) =>
+                        updateZoom(Number(event.target.value))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="crop-zoom-button"
+                      onClick={() => updateZoom(crop.zoom + 0.1)}
+                      disabled={crop.zoom >= MAX_CROP_ZOOM}
+                      aria-label="Show a smaller crop area"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="crop-actions">
+                  <button
+                    type="button"
+                    className="button button-quiet crop-reset-button"
+                    onClick={resetCrop}
+                    disabled={
+                      uploading ||
+                      (crop.centerX === 0.5 &&
+                        crop.centerY === 0.5 &&
+                        crop.zoom === MIN_CROP_ZOOM)
+                    }
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-quiet"
+                    onClick={cancelCrop}
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={cropAndUpload}
+                    disabled={uploading || !imageLayout}
+                  >
+                    {uploading ? "Uploading..." : "Use photo"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }
