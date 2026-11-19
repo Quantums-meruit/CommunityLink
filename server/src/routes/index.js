@@ -299,18 +299,20 @@ router.post("/auth/logout", (req, res) => {
   ok(res, { message: "Logged out successfully." });
 });
 
-// Return basic information about the currently authenticated user.
+// Return the current session user, or null when the visitor is anonymous.
 router.get(
   "/auth/me",
-  protect,
+  optionalAuth,
   asyncRoute(async (req, res) =>
     ok(res, {
-      user: {
+      user: req.user
+        ? {
         id: req.user.id,
         name: req.user.name,
         email: req.user.email,
         globalRole: req.user.globalRole,
-      },
+          }
+        : null,
     })
   )
 );
@@ -2315,4 +2317,3 @@ router.patch(
 
 // Make this router available to the main Express application.
 export default router;
-

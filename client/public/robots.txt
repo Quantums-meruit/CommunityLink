@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /applications
+Disallow: /notifications
+Disallow: /admin
+Disallow: /communities/create
+Disallow: /events/create
+Disallow: /businesses/create
+Disallow: /opportunities/create
